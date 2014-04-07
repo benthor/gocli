@@ -9,6 +9,13 @@ mainly adding convenience functions for
  * tab completion
  * running a REPL-ish loop
 
+A few (currently) built-in defaults:
+
+ * whitespaces in commands are not allowed
+ * the tab completer will complete non-ambiguous but incomplete commands while preserving all arguments
+ * options registered with empty help message won't show up in help list
+
+
 (May or may not be idiomatic Go, the author is just a pedestrian hacker messing around with an interesting new programming language)
 */
 package gocli
@@ -65,7 +72,7 @@ func (cli *CLI) Loop(prompt string) {
 		cmd, err := cli.Liner.Prompt(prompt)
 		if err != nil {
 			// l.Println(err)
-			cli.Exit(fmt.Sprintf("error: %q", err.Error()))
+			cli.Exit([]string{fmt.Sprintf("error: %q", err.Error())})
 		} else {
 			tmp := strings.Split(cmd, " ")
 			if option, ok := cli.Options[tmp[0]]; ok {
@@ -78,20 +85,24 @@ func (cli *CLI) Loop(prompt string) {
 	}
 }
 
-// Help returns a documentation string about all registered Options
+// Help returns a documentation string about all registered Options.
+// It is meant to be used as the callback of a registered "help" Option
 func (cli *CLI) Help(args []string) string {
 	var result string
 	for cmd, option := range cli.Options {
-		fmt.Printf("%"+fmt.Sprintf("%d", cli.longest)+"s  -  %s\n", cmd, option.Help)
+		if len(option.Help) > 0 {
+			fmt.Printf("%"+fmt.Sprintf("%d", cli.longest)+"s  -  %s\n", cmd, option.Help)
+		}
 	}
 	return result
 }
 
-// Exit terminates the loop, returning the specified message
-func (cli *CLI) Exit(message string) string {
+// Exit terminates the loop, returning a concatenation of all string arguments
+// (The signature purposefully matches that of an Option callback to be easily called as such)
+func (cli *CLI) Exit(args []string) string {
 	cli.looping = false
 	cli.Liner.Close()
-	return message
+	return strings.Join(args, " ")
 }
 
 // MkCLI returns new CLI
