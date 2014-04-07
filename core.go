@@ -112,12 +112,24 @@ func MkCLI(greeting string) CLI {
 		tokens := strings.Split(line, " ")
 		// first word is already a valid command
 		if _, ok := tmp.Options[tokens[0]]; ok {
+			// add whitespace to indicate validity of command by jumping cursor
 			return []string{line + " "}
 		}
 		candidates := []string{}
+		filtered := []string{}
 		for candidate, _ := range tmp.Options {
-			if strings.Contains(candidate, tokens[0]) {
+			// only do prefix here
+			if strings.HasPrefix(candidate, tokens[0]) {
 				// make sure that any arguments are carried through the tab completion
+				candidates = append(candidates, candidate+" "+strings.Join(tokens[1:], " "))
+			} else {
+				filtered = append(filtered, candidate)
+			}
+		}
+		// test for substring in the rest
+		// TODO: could also disallow matching of single (or just a few) letters by doing a length check on tokens[0] here
+		for _, candidate := range filtered {
+			if strings.Contains(candidate, tokens[0]) {
 				candidates = append(candidates, candidate+" "+strings.Join(tokens[1:], " "))
 			}
 		}
