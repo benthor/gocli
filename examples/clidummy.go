@@ -1,3 +1,6 @@
+/*
+clidummy demonstrates the basics of using the gocli library
+*/
 package main
 
 import (
