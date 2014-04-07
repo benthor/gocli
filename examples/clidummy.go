@@ -15,8 +15,8 @@ func main() {
 	// register help Option with stub callback calling cli.Help("")
 	cli.AddOption("help", "prints this help message", func(args []string) string { return cli.Help(args) })
 
-	// register exit Option with stub callback calling cli.Exit("bye")
-	cli.AddOption("exit", "exits the input loop", func(_ []string) string { return cli.Exit("bye") })
+	// register exit Option with stub callback calling cli.Exit with any further provided tokens as argument
+	cli.AddOption("exit", "exits the input loop", func(args []string) string { return cli.Exit(strings.Join(args, " ")) })
 
 	cli.DefaultOption(func(args []string) string {
 		return strings.Join(args, " ")
