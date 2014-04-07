@@ -11,7 +11,6 @@ mainly adding convenience functions for
 
 (May or may not be idiomatic Go, the author is just a pedestrian hacker messing around with an interesting new programming language)
 */
-
 package gocli
 
 import (
