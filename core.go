@@ -79,7 +79,9 @@ func (cli *CLI) Loop(prompt string) {
 				cli.Liner.AppendHistory(cmd)
 				fmt.Println(option.Function(tmp[1:]))
 			} else {
-				fmt.Println(cli.Default.Function(tmp))
+				if cli.Default.Function != nil {
+					fmt.Println(cli.Default.Function(tmp))
+				}
 			}
 		}
 	}
