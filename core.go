@@ -20,20 +20,24 @@ import (
 	"strings"
 )
 
+// type Option may or may not contain accessible attributes in the future
 type Option struct {
 	Cmd      string
 	Help     string
 	Function func(args []string) string
 }
 
+// type CLI may or may not contain accessible attributes in the future
 type CLI struct {
-	Liner   liner.State
-	Options map[string]Option
-	Default Option
-	looping bool
+	Liner    liner.State
+	Options  map[string]Option
+	Default  Option
+	Greeting string
+	looping  bool
 }
 
 // AddOption registers a command (cmd), appropriate documentation string (help) and callback function with the CLI
+// Also registers cmd with the in-built Tab completer
 // Returns an error if cmd string contains white spaces
 func (cli *CLI) AddOption(cmd string, help string, function func(args []string) string) error {
 	if strings.Count(cmd, " ") > 0 {
@@ -51,6 +55,7 @@ func (cli *CLI) DefaultOption(function func(args []string) string) {
 // Loop is a REPL-inspired loop, prompting for input and running the registered callbacks
 func (cli *CLI) Loop(prompt string) {
 	cli.looping = true
+	fmt.Println(cli.Greeting)
 	for cli.looping {
 		cmd, err := cli.Liner.Prompt(prompt)
 		if err != nil {
@@ -59,6 +64,7 @@ func (cli *CLI) Loop(prompt string) {
 		} else {
 			tmp := strings.Split(cmd, " ")
 			if option, ok := cli.Options[tmp[0]]; ok {
+				cli.Liner.AppendHistory(cmd)
 				fmt.Println(option.Function(tmp[1:]))
 			} else {
 				fmt.Println(cli.Default.Function(tmp))
@@ -79,6 +85,23 @@ func (cli *CLI) Exit(message string) string {
 	return message
 }
 
-func MkCLI() CLI {
-	return CLI{*liner.NewLiner(), make(map[string]Option), Option{}, true}
+// MkCLI returns new CLI
+func MkCLI(greeting string) CLI {
+	tmp := CLI{*liner.NewLiner(), make(map[string]Option), Option{}, greeting, true}
+	tmp.Liner.SetCompleter(func(line string) []string {
+		tokens := strings.Split(line, " ")
+		// first word is already a valid command
+		if _, ok := tmp.Options[tokens[0]]; ok {
+			return []string{line + " "}
+		}
+		candidates := []string{}
+		for candidate, _ := range tmp.Options {
+			if strings.Contains(candidate, tokens[0]) {
+				// make sure that any arguments are carried through the tab completion
+				candidates = append(candidates, candidate+" "+strings.Join(tokens[1:], " "))
+			}
+		}
+		return candidates
+	})
+	return tmp
 }
