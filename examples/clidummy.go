@@ -24,6 +24,18 @@ func main() {
 	// register hidden quit Option with cli.Exit as callback. Should not appear in "help" list
 	cli.AddOption("quit", "", cli.Exit)
 
+	// demonstrate argument passing
+	cli.AddOption("quote", "qotes all arguments", func(args []string) string {
+		res := ""
+		for i, arg := range args {
+			if i != 0 {
+				res += " "
+			}
+			res += "\"" + arg + "\""
+		}
+		return res
+	})
+
 	cli.DefaultOption(func(args []string) string {
 		return fmt.Sprintf("%s: command not found, type 'help' for help", args[0])
 	})
